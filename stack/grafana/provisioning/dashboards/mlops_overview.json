@@ -1,0 +1,116 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "SYSTEM HARDWARE HEALTH (NODE EXPORTER)",
+      "type": "row"
+    },
+    {
+      "id": 1,
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
+      "title": "Host CPU Utilization (%)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+          "legendFormat": "CPU Busy %"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
+      "title": "Host Memory Usage (RAM)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024 / 1024",
+          "legendFormat": "Used RAM (GB)"
+        },
+        {
+          "expr": "node_memory_MemTotal_bytes / 1024 / 1024 / 1024",
+          "legendFormat": "Total RAM (GB)"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
+      "title": "Disk I/O Read / Write (MB/s)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "expr": "rate(node_disk_read_bytes_total[1m]) / 1024 / 1024",
+          "legendFormat": "Read (MB/s)"
+        },
+        {
+          "expr": "rate(node_disk_written_bytes_total[1m]) / 1024 / 1024",
+          "legendFormat": "Write (MB/s)"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 200,
+      "title": "MLOPS FASTAPI INFERENCE METRICS",
+      "type": "row"
+    },
+    {
+      "id": 4,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "title": "Inference Request Throughput (RPS)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "Requests / Sec"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "title": "API Latency p95 / p99 (Seconds)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))",
+          "legendFormat": "p95 Latency"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))",
+          "legendFormat": "p99 Latency"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["mlops", "arch", "prometheus"],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "MLOps Enterprise Platform Overview",
+  "uid": "mlops-overview"
+}
