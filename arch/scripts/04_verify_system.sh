@@ -44,7 +44,7 @@ check_endpoint() {
     fi
 }
 
-check_endpoint "FastAPI Model Serving" "http://localhost:8000/health" "200"
+check_endpoint "FastAPI Model Serving" "http://localhost:8080/health" "200"
 check_endpoint "MLflow Tracking UI   " "http://localhost:5000/" "200"
 check_endpoint "Grafana Dashboard UI " "http://localhost:3000/api/health" "200"
 check_endpoint "MinIO Web Console    " "http://localhost:9001/" "200"
