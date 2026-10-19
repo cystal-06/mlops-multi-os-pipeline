@@ -47,7 +47,6 @@ check_endpoint() {
 check_endpoint "FastAPI Model Serving" "http://localhost:8080/health" "200"
 check_endpoint "MLflow Tracking UI   " "http://localhost:5000/" "200"
 check_endpoint "Grafana Dashboard UI " "http://localhost:3000/api/health" "200"
-check_endpoint "MinIO Web Console    " "http://localhost:9001/" "200"
 
 log_step "CHECK 5: Testing Zero-Trust Network Isolation (Security Audit)"
 if nc -z -w 1 localhost 5432 2>/dev/null; then

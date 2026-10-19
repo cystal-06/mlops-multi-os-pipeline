@@ -17,42 +17,6 @@ services:
       timeout: 5s
       retries: 5
 
-  minio:
-    image: minio/minio:RELEASE.2024-01-18T22-51-28Z
-    container_name: mlops-minio
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-secure_minio_password_change_me}
-    volumes:
-      - minio_data:/data
-    networks:
-      - mlops-backend
-      - mlops-frontend
-    ports:
-      - "9001:9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  minio-init:
-    image: minio/mc:RELEASE.2024-01-18T22-49-14Z
-    container_name: mlops-minio-init
-    depends_on:
-      minio:
-        condition: service_healthy
-    networks:
-      - mlops-backend
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-secure_minio_password_change_me};
-      /usr/bin/mc mb myminio/${MLFLOW_BUCKET_NAME:-mlflow-artifacts} --ignore-existing;
-      exit 0;
-      "
-
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.2
     container_name: mlops-mlflow
@@ -60,18 +24,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-    environment:
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-secure_minio_password_change_me}
     command: >
       mlflow server
       --backend-store-uri postgresql://${POSTGRES_USER:-mlops}:${POSTGRES_PASSWORD:-secure_postgres_password_change_me}@postgres:5432/${POSTGRES_DB:-mlflow_db}
-      --default-artifact-root s3://${MLFLOW_BUCKET_NAME:-mlflow-artifacts}/
+      --default-artifact-root /mlflow/artifacts
       --host 0.0.0.0
       --port 5000
+    volumes:
+      - mlflow_artifacts:/mlflow/artifacts
     networks:
       - mlops-backend
       - mlops-frontend
@@ -86,9 +46,6 @@ services:
     restart: unless-stopped
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-secure_minio_password_change_me}
     networks:
       - mlops-backend
       - mlops-frontend
@@ -142,4 +99,4 @@ networks:
 
 volumes:
   postgres_data:
-  minio_data:
+  mlflow_artifacts:
