@@ -1,24 +1,21 @@
 import os
-from transformers import pipeline
+import joblib
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.ensemble import RandomForestClassifier
 
-DEFAULT_MODEL_NAME = "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
-_cached_pipeline = None
+DEFAULT_MODEL_PATH = "/app/models/rf_model.joblib"
 
-def get_sentiment_model(model_name: str = DEFAULT_MODEL_NAME):
-    global _cached_pipeline
-    if _cached_pipeline is None:
-        _cached_pipeline = pipeline(
-            "sentiment-analysis",
-            model=model_name,
-            device=-1
-        )
-    return _cached_pipeline
+def ensure_model():
+    os.makedirs(os.path.dirname(DEFAULT_MODEL_PATH), exist_ok=True)
+    if not os.path.exists(DEFAULT_MODEL_PATH):
+        X, y = load_iris(return_X_y=True)
+        clf = RandomForestClassifier(n_estimators=50, max_depth=4, random_state=42)
+        clf.fit(X, y)
+        joblib.dump(clf, DEFAULT_MODEL_PATH)
+    return joblib.load(DEFAULT_MODEL_PATH)
 
-def reload_sentiment_model(new_model_name: str = DEFAULT_MODEL_NAME):
-    global _cached_pipeline
-    _cached_pipeline = pipeline(
-        "sentiment-analysis",
-        model=new_model_name,
-        device=-1
-    )
-    return _cached_pipeline
+def load_model(path: str = DEFAULT_MODEL_PATH):
+    if os.path.exists(path):
+        return joblib.load(path)
+    return ensure_model()

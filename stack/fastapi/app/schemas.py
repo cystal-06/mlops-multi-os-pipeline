@@ -1,35 +1,22 @@
 from pydantic import BaseModel, Field
 
-class SentimentRequest(BaseModel):
-    text: str = Field(
-        ...,
-        min_length=1,
-        max_length=1000,
-        description="Text to analyze sentiment",
-        example="This Linux MLOps system deployed on Arch Linux is incredibly fast and secure!"
-    )
+class FeaturesInput(BaseModel):
+    sepal_length: float = Field(..., ge=0.1, le=10.0, example=5.1)
+    sepal_width: float = Field(..., ge=0.1, le=10.0, example=3.5)
+    petal_length: float = Field(..., ge=0.1, le=10.0, example=1.4)
+    petal_width: float = Field(..., ge=0.1, le=10.0, example=0.2)
 
-class SentimentResponse(BaseModel):
+class PredictionResponse(BaseModel):
     model_name: str
     model_version: str
-    input_text: str
-    label: str
+    predicted_class: int
+    predicted_label: str
     confidence_score: float
-    is_positive: bool
 
-class BatchSentimentRequest(BaseModel):
-    texts: list[str] = Field(
-        ...,
-        min_items=1,
-        max_items=50,
-        description="List of sentences for batch inference",
-        example=[
-            "Arch Linux rolling release is wonderful and up to date.",
-            "Server connection timed out with critical failure."
-        ]
-    )
+class BatchFeaturesInput(BaseModel):
+    instances: list[FeaturesInput]
 
-class BatchSentimentResponse(BaseModel):
+class BatchPredictionResponse(BaseModel):
     model_name: str
-    total_processed: int
-    results: list[SentimentResponse]
+    total_predictions: int
+    predictions: list[PredictionResponse]

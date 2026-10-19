@@ -1,92 +1,87 @@
+import numpy as np
 from fastapi import FastAPI, HTTPException, status
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.schemas import (
-    SentimentRequest,
-    SentimentResponse,
-    BatchSentimentRequest,
-    BatchSentimentResponse,
+    FeaturesInput,
+    PredictionResponse,
+    BatchFeaturesInput,
+    BatchPredictionResponse,
 )
-from app.model_manager import get_sentiment_model, reload_sentiment_model
+from app.model_manager import load_model
 
 app = FastAPI(
-    title="MLOps Production NLP Serving Service",
-    description="High-Throughput Sentiment Analysis Inference Microservice with Prometheus Telemetry",
-    version="2.0.0",
+    title="MLOps Production Serving Service",
+    description="High-Throughput Lightweight Model Serving API on Arch Linux",
+    version="1.0.0",
 )
 
 Instrumentator().instrument(app).expose(app)
 
-current_model_version = "v1.0.0-distilbert"
-current_model_name = "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
+CLASS_NAMES = {0: "setosa", 1: "versicolor", 2: "virginica"}
+
+current_model = load_model()
+current_model_version = "v1.0.0-rf-iris"
 
 @app.get("/health", status_code=status.HTTP_200_OK)
 def health():
     return {
         "status": "healthy",
-        "service": "mlops-sentiment-inference",
-        "model_name": current_model_name,
+        "service": "mlops-serving",
         "model_version": current_model_version,
     }
 
-@app.post("/v1/predict", response_model=SentimentResponse, status_code=status.HTTP_200_OK)
-def predict(request: SentimentRequest):
+@app.post("/v1/predict", response_model=PredictionResponse, status_code=status.HTTP_200_OK)
+def predict(data: FeaturesInput):
     try:
-        classifier = get_sentiment_model(current_model_name)
-        result = classifier(request.text)[0]
-        label = result["label"].upper()
-        score = round(float(result["score"]), 4)
+        sample = np.array([[data.sepal_length, data.sepal_width, data.petal_length, data.petal_width]])
+        pred_class = int(current_model.predict(sample)[0])
+        probabilities = current_model.predict_proba(sample)[0]
+        confidence = float(np.max(probabilities))
 
-        return SentimentResponse(
-            model_name=current_model_name,
+        return PredictionResponse(
+            model_name="RandomForestClassifier",
             model_version=current_model_version,
-            input_text=request.text,
-            label=label,
-            confidence_score=score,
-            is_positive=(label == "POSITIVE"),
+            predicted_class=pred_class,
+            predicted_label=CLASS_NAMES.get(pred_class, "unknown"),
+            confidence_score=round(confidence, 4),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/v1/predict/batch", response_model=BatchSentimentResponse, status_code=status.HTTP_200_OK)
-def predict_batch(batch_request: BatchSentimentRequest):
-    if not batch_request.texts:
-        raise HTTPException(status_code=400, detail="Texts list cannot be empty")
+@app.post("/v1/predict/batch", response_model=BatchPredictionResponse, status_code=status.HTTP_200_OK)
+def predict_batch(batch: BatchFeaturesInput):
+    if not batch.instances:
+        raise HTTPException(status_code=400, detail="Empty instances list")
 
-    try:
-        classifier = get_sentiment_model(current_model_name)
-        raw_results = classifier(batch_request.texts)
-
-        formatted = []
-        for text, res in zip(batch_request.texts, raw_results):
-            label = res["label"].upper()
-            score = round(float(res["score"]), 4)
-            formatted.append(
-                SentimentResponse(
-                    model_name=current_model_name,
-                    model_version=current_model_version,
-                    input_text=text,
-                    label=label,
-                    confidence_score=score,
-                    is_positive=(label == "POSITIVE"),
-                )
+    results = []
+    for item in batch.instances:
+        sample = np.array([[item.sepal_length, item.sepal_width, item.petal_length, item.petal_width]])
+        pred_class = int(current_model.predict(sample)[0])
+        probabilities = current_model.predict_proba(sample)[0]
+        confidence = float(np.max(probabilities))
+        results.append(
+            PredictionResponse(
+                model_name="RandomForestClassifier",
+                model_version=current_model_version,
+                predicted_class=pred_class,
+                predicted_label=CLASS_NAMES.get(pred_class, "unknown"),
+                confidence_score=round(confidence, 4),
             )
-
-        return BatchSentimentResponse(
-            model_name=current_model_name,
-            total_processed=len(formatted),
-            results=formatted,
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Batch inference error: {str(e)}")
+
+    return BatchPredictionResponse(
+        model_name="RandomForestClassifier",
+        total_predictions=len(results),
+        predictions=results,
+    )
 
 @app.post("/v1/models/reload", status_code=status.HTTP_200_OK)
-def reload_model(new_version: str = "v2.0.0-distilbert-reloaded"):
-    global current_model_version
-    reload_sentiment_model(current_model_name)
-    current_model_version = new_version
+def reload_model():
+    global current_model, current_model_version
+    current_model = load_model()
+    current_model_version = "v1.1.0-reloaded"
     return {
         "status": "success",
-        "message": "Hugging Face model reloaded in RAM with zero downtime",
-        "active_version": current_model_version,
+        "active_model_version": current_model_version,
     }
