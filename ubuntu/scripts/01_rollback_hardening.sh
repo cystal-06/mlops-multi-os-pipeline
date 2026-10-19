@@ -1,39 +1,49 @@
 #!/usr/bin/env bash
-
+set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/00_common.sh"
-
 require_root
-
-DEPLOY_USER="mlops"
-
-log_step "PHASE 1: Disabling UFW Firewall"
-if which ufw &>/dev/null; then
-    ufw --force reset || true
-    ufw disable || true
-    log_success "UFW firewall reset and disabled."
+require_ubuntu
+STATE_DIR=/var/lib/mlops-infra/hardening
+if [[ ! -f "$STATE_DIR/ready" ]]; then
+    log_info "No hardening backup; nothing to restore."
+    exit 0
 fi
-
-log_step "PHASE 2: Restoring SSH Configuration"
-SSHD_HARDENED_FILE="/etc/ssh/sshd_config.d/99-mlops-hardened.conf"
-
-if [[ -f "${SSHD_HARDENED_FILE}" ]]; then
-    rm -f "${SSHD_HARDENED_FILE}"
-    if sshd -t; then
-        systemctl restart ssh || systemctl restart sshd
-        log_success "SSH daemon reverted to default port."
+if [[ -n "${SSH_CONNECTION:-}" ]]; then
+    log_error "Run rollback from the VMware console."
+    exit 1
+fi
+ufw disable
+for path in /etc/ssh/sshd_config /etc/ssh/mlops_hardened.conf \
+    /etc/ssh/sshd_config.d/99-mlops-hardened.conf /etc/ufw /etc/default/ufw; do
+    restore_path "$path"
+done
+/usr/sbin/sshd -t
+if grep -q '^Status: active' "$STATE_DIR/ufw-status"; then
+    ufw --force enable
+else
+    ufw disable
+fi
+systemctl stop ssh.service
+if systemctl cat ssh.socket >/dev/null 2>&1; then
+    systemctl stop ssh.socket
+    if grep -qx enabled "$STATE_DIR/socket-enabled"; then
+        systemctl enable ssh.socket
+    else
+        systemctl disable ssh.socket
     fi
 fi
-
-log_step "PHASE 3: Cleaning up Deploy User ('${DEPLOY_USER}')"
-if id "${DEPLOY_USER}" &>/dev/null; then
-    echo -e "${COLOR_YELLOW}[PROMPT] Remove user '${DEPLOY_USER}' and /home/${DEPLOY_USER}? [y/N]: ${COLOR_RESET}\c"
-    read -r response
-    if [[ "${response}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        pkill -u "${DEPLOY_USER}" || true
-        userdel -r "${DEPLOY_USER}" 2>/dev/null || userdel "${DEPLOY_USER}"
-        log_success "User '${DEPLOY_USER}' removed."
-    fi
+if grep -qx enabled "$STATE_DIR/ssh-enabled"; then
+    systemctl enable ssh.service
+else
+    systemctl disable ssh.service
 fi
-
-log_step "ROLLBACK COMPLETE"
+systemctl daemon-reload
+if grep -qx active "$STATE_DIR/socket-active"; then
+    systemctl start ssh.socket
+fi
+if grep -qx active "$STATE_DIR/ssh-active"; then
+    systemctl start ssh.service
+fi
+log_success "Restored saved SSH/UFW state. Kept mlops account and its files."
+log_info "Backup retained; reruns restore the same baseline. Packages are retained."
