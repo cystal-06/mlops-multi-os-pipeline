@@ -1,22 +1,33 @@
 from pydantic import BaseModel, Field
 
-class FeaturesInput(BaseModel):
-    sepal_length: float = Field(..., ge=0.1, le=10.0, example=5.1)
-    sepal_width: float = Field(..., ge=0.1, le=10.0, example=3.5)
-    petal_length: float = Field(..., ge=0.1, le=10.0, example=1.4)
-    petal_width: float = Field(..., ge=0.1, le=10.0, example=0.2)
+class TextAnalysisRequest(BaseModel):
+    text: str = Field(
+        ...,
+        min_length=1,
+        max_length=2000,
+        description="Đoạn văn bản tiếng Anh cần quét và phân tích cảm xúc (NLP)",
+        example="This Linux MLOps system on Arch Linux is incredibly fast, clean and very secure!"
+    )
 
-class PredictionResponse(BaseModel):
+class TextAnalysisResponse(BaseModel):
     model_name: str
     model_version: str
-    predicted_class: int
-    predicted_label: str
+    input_text: str
+    sentiment_label: str
     confidence_score: float
+    sentiment_score: float
+    word_count: int
+    matched_sentiment_tokens: list[str]
 
-class BatchFeaturesInput(BaseModel):
-    instances: list[FeaturesInput]
+class BatchTextRequest(BaseModel):
+    documents: list[str] = Field(
+        ...,
+        example=[
+            "Arch Linux rolling release is awesome, beautiful and super fast!",
+            "The database server crashed with critical error and high latency."
+        ]
+    )
 
-class BatchPredictionResponse(BaseModel):
-    model_name: str
-    total_predictions: int
-    predictions: list[PredictionResponse]
+class BatchTextResponse(BaseModel):
+    total_processed: int
+    results: list[TextAnalysisResponse]
