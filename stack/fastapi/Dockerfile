@@ -18,6 +18,8 @@ RUN useradd -u 10001 -m -s /bin/bash mlopsuser
 COPY --from=builder /root/.local /home/mlopsuser/.local
 COPY app /app/app
 
+RUN mkdir -p /app/models && chown -R mlopsuser:mlopsuser /app
+
 ENV PATH=/home/mlopsuser/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 
