@@ -41,26 +41,36 @@ scan_single_image() {
     python3 -c '
 import sys, json
 
+raw_json = sys.argv[1]
+dur = sys.argv[2]
+
 try:
-    data = json.loads(sys.argv[1])
+    data = json.loads(raw_json)
 except Exception:
     print("\033[1;31m[✘] Lỗi kết nối tới AI API!\033[0m")
     sys.exit(1)
 
 if data.get("status") == "success":
-    dur = sys.argv[2]
+    engine = data.get("model_engine", "Unknown")
+    ver = data.get("model_version", "")
+    res = data.get("image_resolution", "Unknown")
+    wcount = data.get("word_count", 0)
+    ccount = data.get("char_count", 0)
+    text = data.get("extracted_text", "")
+
     print(f"\033[1;32m[✔] QUÉT THÀNH CÔNG TRONG {dur} ms!\033[0m")
     print("\033[1;34m" + "─"*70 + "\033[0m")
-    print(f"  • Model Engine  : \033[1;35m{data.get(\"model_engine\")}\033[0m")
-    print(f"  • Độ Phân Giải  : {data.get(\"image_resolution\")}")
-    print(f"  • Số Từ Đọc Được: \033[1;33m{data.get(\"word_count\")}\033[0m từ")
-    print(f"  • Tổng Ký Tự    : \033[1;33m{data.get(\"char_count\")}\033[0m ký tự")
+    print(f"  • Model Engine  : \033[1;35m{engine}\033[0m ({ver})")
+    print(f"  • Độ Phân Giải  : {res}")
+    print(f"  • Số Từ Đọc Được: \033[1;33m{wcount}\033[0m từ")
+    print(f"  • Tổng Ký Tự    : \033[1;33m{ccount}\033[0m ký tự")
     print("\033[1;34m" + "─"*70 + "\033[0m")
-    print("\033[1;32m[NỘI DUNG VĂN BẢN TRONG ẢNH]:\033[0m\n")
-    print(f"\033[1m{data.get(\"extracted_text\")}\033[0m\n")
+    print("\033[1;32m\033[1m[NỘI DUNG VĂN BẢN TRONG ẢNH]:\033[0m\n")
+    print(f"\033[1m{text}\033[0m\n")
     print("\033[1;36m" + "═"*70 + "\033[0m")
 else:
-    print(f"\033[1;31m[✘] Lỗi:\033[0m {data.get(\"detail\", \"Unknown error\")}")
+    err = data.get("detail", "Unknown error")
+    print(f"\033[1;31m[✘] Lỗi:\033[0m {err}")
 ' "${response}" "${duration}"
 }
 
