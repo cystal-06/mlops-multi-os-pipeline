@@ -1,0 +1,25 @@
+{
+  "name": "mlops-multi-os-pipeline",
+  "version": "1.0.0",
+  "description": "Comparative study of an identical, production-grade MLOps stack deployed across two contrasting Linux paradigms: - **Arch Linux Node**: Rolling-Release, DIY, Native `nftables`, Rootless Docker with unprivileged namespaces. - **Ubuntu Server Node**: LTS Enterprise, Debian conventions, `ufw`, System-level Docker daemon.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cystal-06/mlops-multi-os-pipeline.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/cystal-06/mlops-multi-os-pipeline/issues"
+  },
+  "homepage": "https://github.com/cystal-06/mlops-multi-os-pipeline#readme",
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
