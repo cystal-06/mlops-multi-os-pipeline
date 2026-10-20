@@ -12,7 +12,7 @@ COLOR_BOLD="\033[1m"
 COLOR_MAGENTA="\033[1;35m"
 
 print_header() {
-    clear
+    clear 2>/dev/null || true
     echo -e "${COLOR_CYAN}${COLOR_BOLD}"
     echo "╔══════════════════════════════════════════════════════════════════════╗"
     echo "║       ARCH LINUX MLOPS TERMINAL - AI OCR VISION INTERFACE            ║"

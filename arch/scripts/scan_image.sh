@@ -12,7 +12,7 @@ COLOR_BOLD="\033[1m"
 COLOR_MAGENTA="\033[1;35m"
 
 print_banner() {
-    clear
+    clear 2>/dev/null || true
     echo -e "${COLOR_CYAN}${COLOR_BOLD}"
     echo "========================================================================"
     echo "       ARCH LINUX MLOPS OCR INFERENCE SCANNER (TERMINAL CLI)            "
@@ -64,15 +64,22 @@ except Exception as e:
 
 if data.get("status") == "success":
     duration = sys.argv[2]
+    engine = data.get("model_engine", "Unknown")
+    ver = data.get("model_version", "")
+    res = data.get("image_resolution", "Unknown")
+    wcount = data.get("word_count", 0)
+    ccount = data.get("char_count", 0)
+    text = data.get("extracted_text", "")
+
     print(f"\033[1;32m[✔] SCAN COMPLETED SUCCESSFULLY IN {duration} ms!\033[0m")
     print("\033[1;36m------------------------------------------------------------------------\033[0m")
-    print(f"  • Engine Model   : \033[1;35m{data.get(\"model_engine\")}\033[0m ({data.get(\"model_version\")})")
-    print(f"  • Image Res      : {data.get(\"image_resolution\")}")
-    print(f"  • Words Detected : \033[1m{data.get(\"word_count\")}\033[0m")
-    print(f"  • Characters     : \033[1m{data.get(\"char_count\")}\033[0m")
+    print(f"  • Engine Model   : \033[1;35m{engine}\033[0m ({ver})")
+    print(f"  • Image Res      : {res}")
+    print(f"  • Words Detected : \033[1m{wcount}\033[0m")
+    print(f"  • Characters     : \033[1m{ccount}\033[0m")
     print("\033[1;36m------------------------------------------------------------------------\033[0m")
     print("\033[1;32m\033[1m[EXTRACTED TEXT FROM IMAGE]:\033[0m\n")
-    print(f"\033[1m{data.get(\"extracted_text\")}\033[0m\n")
+    print(f"\033[1m{text}\033[0m\n")
     print("\033[1;36m========================================================================\033[0m")
 else:
     print(f"\033[1;31m[✘] OCR SCAN FAILED:\033[0m {data}")

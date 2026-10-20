@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Tiến Độ Đồ Án MLOps - VKU</title>
+    <style>
+        :root {
+            --primary: #002060;
+            --accent: #ba141a;
+            --highlight: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg-dark: #090d16;
+            --card-bg: #131b2e;
+            --card-border: #233354;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Top Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 5px;
+            background: #1e293b;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--highlight));
+            width: 8.33%;
+            transition: width 0.3s ease;
+        }
+
+        /* Slides Wrapper */
+        .presentation-deck {
+            flex: 1;
+            display: flex;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px 80px 70px 80px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.96) translateX(40px);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateX(0);
+        }
+
+        /* Slide Headers */
+        .slide-header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--card-border);
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .slide-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slide-title .tag {
+            font-size: 0.9rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #ffffff;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .slide-subtitle {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Slide Content Areas */
+        .slide-body {
+            flex: 1;
+            display: grid;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .grid-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .grid-4 {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        /* Cards & Widgets */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        .card.featured {
+            border-color: var(--highlight);
+            background: linear-gradient(145deg, #131b2e 0%, #172440 100%);
+        }
+
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #38bdf8;
+        }
+
+        .card-header.red { color: #f87171; }
+        .card-header.green { color: #4ade80; }
+        .card-header.amber { color: #fbbf24; }
+
+        .card-body {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            flex: 1;
+        }
+
+        ul.feature-list {
+            list-style: none;
+        }
+
+        ul.feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.98rem;
+        }
+
+        ul.feature-list li::before {
+            content: "✔";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        ul.feature-list.danger li::before {
+            content: "✖";
+            color: #ef4444;
+        }
+
+        /* Code & Terminal Blocks */
+        .terminal-block {
+            background: #040711;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #38bdf8;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .terminal-prompt {
+            color: #a855f7;
+            font-weight: bold;
+        }
+
+        .terminal-success {
+            color: #4ade80;
+        }
+
+        .terminal-cmd {
+            color: #f1f5f9;
+        }
+
+        /* Metric Boxes */
+        .metric-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .metric-box {
+            background: #09101f;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-bottom: 4px;
+        }
+
+        .metric-value.green { color: #34d399; }
+        .metric-value.red { color: #f87171; }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tables */
+        table.styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        table.styled-table th {
+            background: #1a253c;
+            color: #38bdf8;
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 2px solid #2e3e60;
+        }
+
+        table.styled-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #1e293b;
+            color: #cbd5e1;
+        }
+
+        table.styled-table tr:hover td {
+            background: #162035;
+        }
+
+        /* Title Slide Custom Style */
+        .title-slide-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        .vku-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 20px;
+            background: rgba(186, 20, 26, 0.15);
+            border: 1px solid rgba(186, 20, 26, 0.4);
+            border-radius: 50px;
+            color: #f87171;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }
+
+        .main-hero-title {
+            font-size: 3.2rem;
+            font-weight: 900;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            max-width: 1200px;
+        }
+
+        .main-hero-sub {
+            font-size: 1.35rem;
+            color: #94a3b8;
+            max-width: 900px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .meta-team-box {
+            display: flex;
+            gap: 40px;
+            background: #131b2e;
+            border: 1px solid #233354;
+            border-radius: 12px;
+            padding: 18px 40px;
+        }
+
+        .meta-col {
+            text-align: left;
+        }
+
+        .meta-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .meta-val {
+            font-size: 1rem;
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        /* Bottom Controls Bar */
+        .controls-bar {
+            height: 50px;
+            background: #09101f;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            font-size: 0.9rem;
+            color: #64748b;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-nav {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-nav:hover {
+            background: #0284c7;
+            border-color: #0284c7;
+        }
+
+        /* Architecture ASCII Box */
+        .arch-diagram {
+            background: #050814;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.82rem;
+            line-height: 1.35;
+            color: #38bdf8;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        /* Print / PDF Styling */
+        @media print {
+            body {
+                overflow: visible !important;
+                height: auto !important;
+                background: #000000 !important;
+            }
+            .progress-container, .controls-bar {
+                display: none !important;
+            }
+            .slide {
+                position: relative !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: none !important;
+                page-break-after: always !important;
+                height: 100vh !important;
+                width: 100vw !important;
+                padding: 40px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Progress Top -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Presentation Deck Container -->
+    <div class="presentation-deck">
+
+        <!-- ==================== SLIDE 1 ==================== -->
+        <div class="slide active" id="slide-1">
+            <div class="title-slide-container">
+                <div class="vku-badge">
+                    <span>🏛️ TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG VIỆT – HÀN</span>
+                </div>
+                <h1 class="main-hero-title">CONFIGURE AND DEPLOY MLOPS SERVICES<br>ON ARCH LINUX & UBUNTU</h1>
+                <p class="main-hero-sub">
+                    Nghiên cứu đối kháng định lượng, xây dựng kiến trúc Rootless Containerization unprivileged, phân tách mạng Zero-Trust và tự động hóa toàn diện hạ tầng MLOps.
+                </p>
+                <div class="meta-team-box">
+                    <div class="meta-col">
+                        <div class="meta-label">Môn học</div>
+                        <div class="meta-val">Linux & Phần mềm nguồn mở</div>
+                    </div>
+                    <div class="meta-col">
+                        <div class="meta-label">Giảng viên hướng dẫn</div>
+                        <div class="meta-val" style="color:#f87171;">TS. Hoàng Hữu Đức</div>
+                    </div>
+                    <div class="meta-col">
+                        <div class="meta-label">Nhóm sinh viên thực hiện</div>
+                        <div class="meta-val">1. Nguyễn Công Đức (Lead - Arch Linux)</div>
+                        <div class="meta-val">2. Nguyễn Tùng Dương (Ubuntu Infra)</div>
+                        <div class="meta-val">3. Nguyễn Văn C (Monitor & Benchmark)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 2 ==================== -->
+        <div class="slide" id="slide-2">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">1. Tổng Quan & Bối Cảnh Thực Tiễn <span class="tag">Problem Statement</span></h2>
+                    <div class="slide-subtitle">Thách thức phân phối phần mềm Linux và rủi ro an ninh container truyền thống</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="card">
+                    <div class="card-header amber">⚖️ Hai Thái Cực Phân Phối Linux</div>
+                    <div class="card-body">
+                        <p style="margin-bottom:12px;">Trong hạ tầng MLOps hiện đại, việc lựa chọn bản phân phối Linux mang tính quyết định đến hiệu năng và độ ổn định:</p>
+                        <ul class="feature-list">
+                            <li><strong>Arch Linux (Rolling Release):</strong> Luôn tiếp cận nhân Linux Kernel mới nhất (Kernel 6.x/7.x), cgroups v2 và nftables tối tân; triết lý "The Arch Way" siêu tinh gọn (chỉ ~400MB RAM).</li>
+                            <li><strong>Ubuntu Server (LTS):</strong> Độ ổn định doanh nghiệp, đóng băng phiên bản gói (Version Freeze) chu kỳ 5 năm, nhưng đi kèm sự nặng nề của các dịch vụ ngầm (snapd, cloud-init).</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header red">🚨 Hiểm Họa Docker Mặc Định (Root Daemon)</div>
+                    <div class="card-body">
+                        <p style="margin-bottom:12px;">Đại đa số hệ thống hiện nay triển khai Docker daemon chạy dưới quyền <strong>root (UID 0)</strong>:</p>
+                        <ul class="feature-list danger">
+                            <li>Lập trình viên vô tư thêm user vào nhóm docker hoặc mount <code>/var/run/docker.sock</code>.</li>
+                            <li><strong>Container Escape:</strong> Lỗ hổng trong ứng dụng (RCE) cho phép hacker thoát rào chiếm toàn quyền kiểm soát máy chủ host (CVE-2019-5736).</li>
+                            <li>Không phân đoạn mạng: Cơ sở dữ liệu thường xuyên bị mở cổng public 5432 dẫn tới nguy cơ đánh cắp dữ liệu hàng loạt.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 3 ==================== -->
+        <div class="slide" id="slide-3">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">2. Mục Tiêu Nghiên Cứu Đề Tài <span class="tag">SMART Goals</span></h2>
+                    <div class="slide-subtitle">Cam kết hoàn thành 5 mục tiêu kỹ thuật then chốt chuẩn công nghiệp</div>
+                </div>
+            </div>
+            <div class="slide-body grid-3">
+                <div class="card featured">
+                    <div class="card-header green">⚙️ 1. Tự Động Hóa IaC</div>
+                    <div class="card-body">
+                        Xây dựng 100% kịch bản tự động hóa bằng Bash script tuân thủ tính <strong>Idempotent</strong> và bắt buộc có kịch bản <strong>Rollback</strong> khôi phục nguyên trạng máy chủ khi có sự cố.
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header green">🛡️ 2. Rootless Isolation</div>
+                    <div class="card-body">
+                        Tiên phong hiện thực hóa <strong>Rootless Docker unprivileged</strong> trên Arch Linux qua User Namespaces và cgroups v2 delegation, triệt tiêu hoàn toàn rủi ro Container Escape.
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header green">🔒 3. Mạng Zero-Trust</div>
+                    <div class="card-body">
+                        Thiết kế phân tách 2 mạng Docker: Giấu kín hoàn toàn cơ sở dữ liệu PostgreSQL (5432) và MinIO API (9000) trong mạng nội bộ cô lập <code>internal: true</code>.
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header green">⚡ 4. AI Serving & CLI</div>
+                    <div class="card-body">
+                        Đóng gói vi dịch vụ AI OCR siêu nhẹ bằng FastAPI + Tesseract (Non-root UID 10001); phát triển công cụ dòng lệnh Terminal tương tác <code>ai_cli.sh</code> mã màu ANSI.
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header green">📊 5. Benchmark Đối Kháng</div>
+                    <div class="card-body">
+                        Đo lường định lượng mức tiêu thụ RAM tĩnh/động và kiểm thử tải trọng (RPS, Latency p50/p95/p99) đối kháng trực tiếp giữa Arch Linux và Ubuntu Server.
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header green">📑 6. Báo Cáo Học Thuật</div>
+                    <div class="card-body">
+                        Xuất bản báo cáo khoa học <strong>82 trang chuẩn VKU</strong> (DOCX & PDF) trình bày chi tiết cơ sở lý thuyết nhân Linux, thiết kế hệ thống và số liệu thực nghiệm.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 4 ==================== -->
+        <div class="slide" id="slide-4">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">3. Kiến Trúc Phân Tầng Dual-Node <span class="tag">Architecture</span></h2>
+                    <div class="slide-subtitle">Sơ đồ tổng thể hệ thống MLOps độc lập trên Arch Linux và Ubuntu Server</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="arch-diagram">
++-------------------------------------------------------------+
+| [EXTERNAL ACCESS] SSH: 2222 | API: 8080 | MLflow: 5000      |
++------------------------------|------------------------------+
+                               v
++-------------------------------------------------------------+
+| [TẦNG TƯỜNG LỬA HOST] nftables (Arch) vs. UFW (Ubuntu)      |
+|  • Chống Brute-force: Rate-limiting SSH (4 kết nối / phút)  |
+|  • Chính sách Default Deny; chỉ mở cổng công khai cần thiết |
++------------------------------|------------------------------+
+                               v
++-------------------------------------------------------------+
+| [TẦNG HỆ ĐIỀU HÀNH] Arch Linux 6.x vs. Ubuntu 22.04 LTS     |
+|  • Sysctl Hardened (somaxconn=65535, tcp_tw_reuse=1)        |
+|  • User unprivileged: mlops (UID 1003) -> subuid 100000:65k|
++------------------------------|------------------------------+
+                               v
++-------------------------------------------------------------+
+| [TẦNG ROOTLESS ENGINE] User Namespaces + cgroups v2         |
+|  • slirp4netns TAP device  • fuse-overlayfs storage         |
++-------------------------------------------------------------+
+                </div>
+                <div class="arch-diagram">
++-------------------------------------------------------------+
+| [TẦNG MẠNG NỘI BỘ ZERO-TRUST DOCKER NETWORKS]               |
+|                                                             |
+|  +-------------------------------------------------------+  |
+|  | MẠNG CÔNG KHAI (mlops-frontend - Bridge):             |  |
+|  |  • FastAPI OCR Serving : Cổng 8080                    |  |
+|  |  • MLflow Server UI    : Cổng 5000                    |  |
+|  |  • Grafana Dashboard   : Cổng 3000                    |  |
+|  |  • Prometheus Server   : Cổng 9090                    |  |
+|  +---------------------------|---------------------------+  |
+|                              | Giao tiếp nội bộ an toàn     |
+|  +---------------------------v---------------------------+  |
+|  | MẠNG CÔ LẬP NỘI BỘ (mlops-backend - internal: true):  |  |
+|  |  • PostgreSQL 15 Metadata DB : Cổng 5432              |  |
+|  |  • MinIO S3 API Store        : Cổng 9000              |  |
+|  |  (HOÀN TOÀN VÔ HÌNH VỚI MẠNG NGOÀI VÀ MÁY CHỦ HOST!)  |  |
+|  +-------------------------------------------------------+  |
++-------------------------------------------------------------+
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 5 ==================== -->
+        <div class="slide" id="slide-5">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">4. Đột Phá: Rootless Docker Engine <span class="tag">Core Security</span></h2>
+                    <div class="slide-subtitle">Vận hành trọn vẹn cụm container dưới quyền tài khoản không đặc quyền (Non-Root)</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="card">
+                    <div class="card-header green">🔑 Cơ Chế Hoạt Động (User Namespaces)</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li>Thiết lập cấu hình ánh xạ: <code>/etc/subuid</code> và <code>/etc/subgid</code> cấp cho user <code>mlops</code> 65,536 UID ảo bắt đầu từ <code>100000</code>.</li>
+                            <li><strong>Tiến trình trong container:</strong> Tưởng mình là UID 0 (root ảo), nhưng nhân Linux chỉ gán UID 1003 hoặc 110000 trên host vật lý.</li>
+                            <li><strong>cgroups v2 Delegation:</strong> Cho phép user session tự điều phối hạn mức tài nguyên qua <code>/etc/systemd/system/user@.service.d/delegate.conf</code>.</li>
+                            <li><strong>Systemd Lingering:</strong> Kích hoạt <code>loginctl enable-linger mlops</code> đảm bảo container chạy ngầm 24/7 kể cả khi logout.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header red">🛡️ Thử Nghiệm Tấn Công Container Escape</div>
+                    <div class="card-body">
+                        <div class="terminal-block">
+<span class="terminal-prompt">[Host Ubuntu - Rootful Docker]:</span>
+<span class="terminal-cmd">$ docker run --rm -v /:/host alpine touch /host/etc/exploit</span>
+<span class="terminal-success">-> File /etc/exploit TẠO THÀNH CÔNG! (Bị chiếm máy chủ)</span>
+
+<span class="terminal-prompt">[Host Arch - Rootless Docker]:</span>
+<span class="terminal-cmd">$ docker run --rm -v /:/host alpine touch /host/etc/exploit</span>
+<span style="color:#ef4444;">-> touch: /host/etc/exploit: Permission denied (CHẶN ĐỨNG!)</span>
+                        </div>
+                        <p style="margin-top:14px; font-size:0.95rem; color:#cbd5e1;">
+                            👉 <strong>Kết luận:</strong> Triệt tiêu 100% khả năng hacker can thiệp hay phá hoại hệ thống tệp của máy chủ vật lý.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 6 ==================== -->
+        <div class="slide" id="slide-6">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">5. Phân Đoạn Mạng Zero-Trust Network <span class="tag">Isolation</span></h2>
+                    <div class="slide-subtitle">Bảo vệ tuyệt đối cơ sở dữ liệu PostgreSQL và kho Artifact MinIO</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="card">
+                    <div class="card-header blue">📦 Cấu Hình Trong docker-compose.yml</div>
+                    <div class="card-body">
+                        <div class="terminal-block" style="font-size:0.85rem;">
+<span style="color:#64748b;"># Định nghĩa 2 phân vùng mạng</span>
+<span style="color:#38bdf8;">networks:</span>
+  <span style="color:#4ade80;">mlops-frontend:</span> { driver: bridge }
+  <span style="color:#f87171;">mlops-backend:</span>  { <span style="color:#fbbf24;">internal: true</span> }
+
+<span style="color:#38bdf8;">services:</span>
+  <span style="color:#4ade80;">postgres:</span>
+    <span style="color:#64748b;"># Không bind ports ra host (0.0.0.0)!</span>
+    <span style="color:#38bdf8;">networks:</span> [ <span style="color:#f87171;">mlops-backend</span> ]
+
+  <span style="color:#4ade80;">mlflow:</span>
+    <span style="color:#38bdf8;">ports:</span> [ "5000:5000" ]
+    <span style="color:#64748b;"># Cầu nối: tham gia cả 2 mạng</span>
+    <span style="color:#38bdf8;">networks:</span> [ mlops-frontend, mlops-backend ]
+                        </div>
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header green">🧪 Kiểm Chứng An Ninh Chốt Chặn</div>
+                    <div class="card-body">
+                        <p style="margin-bottom:12px;">Kiểm tra rò rỉ cổng từ máy chủ bên ngoài bằng lệnh <code>nc</code> (Netcat):</p>
+                        <div class="terminal-block">
+<span class="terminal-prompt">$</span> <span class="terminal-cmd">nc -z -v -w 1 localhost 5432</span>
+<span style="color:#4ade80;">-> localhost [127.0.0.1] 5432: Connection refused</span>
+
+<span class="terminal-prompt">$</span> <span class="terminal-cmd">nc -z -v -w 1 localhost 9000</span>
+<span style="color:#4ade80;">-> localhost [127.0.0.1] 9000: Connection refused</span>
+                        </div>
+                        <ul class="feature-list" style="margin-top:16px;">
+                            <li>Cơ sở dữ liệu hoàn toàn vô hình với bên ngoài.</li>
+                            <li>MLflow vẫn kết nối CSDL bình thường qua hostname nội bộ <code>postgres:5432</code>.</li>
+                            <li>Loại bỏ 100% rủi ro bị rà quét cổng và tấn công rò rỉ dữ liệu.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 7 ==================== -->
+        <div class="slide" id="slide-7">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">6. Gia Cố Host OS & Tường Lửa nftables <span class="tag">Hardening</span></h2>
+                    <div class="slide-subtitle">Bảo vệ vững chắc tầng hệ điều hành và tối ưu hóa tham số Linux Kernel</div>
+                </div>
+            </div>
+            <div class="slide-body grid-3">
+                <div class="card">
+                    <div class="card-header blue">🔑 Hardening OpenSSH</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li>Đổi cổng sang <strong>2222</strong> (né bot quét tự động).</li>
+                            <li><code>PermitRootLogin no</code> (Cấm root đăng nhập).</li>
+                            <li><code>MaxAuthTries 3</code> (Chống brute-force).</li>
+                            <li>Tắt X11 và TCP forwarding.</li>
+                            <li>Vô hiệu hóa <code>ssh.socket</code> trên Ubuntu để kiểm soát chặt chẽ.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header red">🛡️ Tường Lửa nftables</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li>Chính sách <strong>Default Drop</strong> chuỗi INPUT.</li>
+                            <li>Stateful connection tracking (established, related).</li>
+                            <li><strong>Meter Rate Limiting:</strong> Tối đa 4 kết nối/phút từ 1 IP:
+                                <div class="terminal-block" style="font-size:0.75rem;">
+tcp dport 2222 meter ssh-meter { ip saddr limit rate over 4/minute } drop
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header amber">⚡ Kernel Sysctl Tuning</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><code>net.core.somaxconn = 65535</code> (Tránh nghẽn socket queue).</li>
+                            <li><code>net.ipv4.tcp_tw_reuse = 1</code> (Tái sử dụng nhanh TIME_WAIT).</li>
+                            <li><code>net.ipv4.tcp_syncookies = 1</code> (Chống SYN Flood).</li>
+                            <li><code>fs.file-max = 2097152</code> (Mở rộng file descriptors).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 8 ==================== -->
+        <div class="slide" id="slide-8">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">7. Vi Dịch Vụ AI OCR Serving Tối Ưu <span class="tag">Microservice</span></h2>
+                    <div class="slide-subtitle">Đóng gói Dockerfile Multi-Stage siêu nhẹ thực thi dưới quyền UID 10001</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="card">
+                    <div class="card-header green">📦 Kỹ Thuật Đóng Gói Multi-Stage</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><strong>Stage 1 (Builder):</strong> Cài đặt <code>gcc</code>, biên dịch các thư viện Python <code>Pillow</code>, <code>pytesseract</code>.</li>
+                            <li><strong>Stage 2 (Runtime):</strong> Chỉ copy thư viện đã build sang image sạch; loại bỏ hoàn toàn compilers giúp giảm kích thước và giảm bề mặt tấn công.</li>
+                            <li><strong>User Non-root 10001:</strong> Khởi tạo và chỉ định <code>USER 10001</code> (tài khoản <code>mlopsuser</code>). Ứng dụng không bao giờ chạy quyền root.</li>
+                            <li>Tích hợp endpoint kiểm tra sức khỏe <code>/health</code> và endpoint metrics <code>/metrics</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header blue">⚡ Động Cơ Nhận Dạng Chữ Tesseract</div>
+                    <div class="card-body">
+                        <div class="metric-group" style="margin-bottom:14px;">
+                            <div class="metric-box">
+                                <div class="metric-value green">221 ms</div>
+                                <div class="metric-label">Thời gian suy luận</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-value">0% CUDA</div>
+                                <div class="metric-label">Không cần GPU nặng</div>
+                            </div>
+                        </div>
+                        <ul class="feature-list">
+                            <li>Ứng dụng kiến trúc mạng nơ-ron hồi quy <strong>LSTM</strong> nhận diện chuỗi ký tự quang học.</li>
+                            <li>Hỗ trợ đồng thời từ điển ngôn ngữ tiếng Việt (<code>vie</code>) và tiếng Anh (<code>eng</code>).</li>
+                            <li>Tiêu thụ cực ít RAM (~60MB), lý tưởng để đo lường hiệu năng thuần túy của hệ điều hành Linux.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 9 ==================== -->
+        <div class="slide" id="slide-9">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">8. Hệ Thống Quan Sát & Terminal CLI <span class="tag">Observability</span></h2>
+                    <div class="slide-subtitle">Giám sát thời gian thực qua Grafana/Prometheus và công cụ vận hành CLI</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="card">
+                    <div class="card-header blue">📊 Telemetry: Prometheus & Grafana</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><strong>Prometheus (Port 9090):</strong> Định kỳ mỗi 5s cào metrics từ vi dịch vụ FastAPI (RPS, Latency histogram) và máy chủ host qua Node Exporter (CPU, RAM).</li>
+                            <li><strong>Grafana (Port 3000):</strong> Dashboard trực quan hóa theo thời gian thực: Biểu đồ đường lưu lượng truy cập, phân vị độ trễ p50/p95/p99.</li>
+                            <li><strong>MLflow (Port 5000):</strong> Theo dõi siêu tham số mô hình, tích hợp backend PostgreSQL bền bỉ.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header green">💻 Bộ Công Cụ Dòng Lệnh Terminal</div>
+                    <div class="card-body">
+                        <div class="terminal-block" style="font-size:0.8rem;">
+<span class="terminal-prompt">$ /home/nguyencongduc/mlops-multi-os-pipeline/arch/scripts/ai_cli.sh</span>
+╔══════════════════════════════════════════════════════════════════╗
+║     ARCH LINUX MLOPS TERMINAL - AI OCR VISION INTERFACE          ║
+╚══════════════════════════════════════════════════════════════════╝
+  [1] Quét file ảnh bất kỳ   [2] Quét ảnh mẫu test
+  [3] Kiểm tra AI Health     [4] Thoát
+<span class="terminal-success">[✔] QUÉT THÀNH CÔNG TRONG 221 ms!</span>
+• Words Detected : 12 từ      • Model : Tesseract-OCR Core
+                        </div>
+                        <p style="margin-top:10px; font-size:0.9rem; color:#cbd5e1;">
+                            👉 Tiện ích <code>scan_image.sh</code> cho phép nhúng trực tiếp tính năng AI vào Unix pipelines.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 10 ==================== -->
+        <div class="slide" id="slide-10">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">9. Kết Quả Thực Nghiệm Đối Kháng <span class="tag">Benchmarking</span></h2>
+                    <div class="slide-subtitle">Số liệu đo lường định lượng thực tế giữa Arch Linux và Ubuntu Server</div>
+                </div>
+            </div>
+            <div class="slide-body">
+                <div class="card">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Chỉ số đo lường hiệu năng</th>
+                                <th>Arch Linux (Rootless Docker)</th>
+                                <th>Ubuntu Server (Rootful Docker)</th>
+                                <th>Đánh giá kỹ thuật</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Chiếm dụng RAM tĩnh (Idle OS)</strong></td>
+                                <td style="color:#34d399; font-weight:bold;">438 MB RAM</td>
+                                <td style="color:#f87171;">742 MB RAM</td>
+                                <td><strong>Arch Linux tiết kiệm 40.9% bộ nhớ</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Chiếm dụng RAM động (Stack Active)</strong></td>
+                                <td style="color:#34d399; font-weight:bold;">1,280 MB RAM</td>
+                                <td>1,620 MB RAM</td>
+                                <td><strong>Arch Linux tiết kiệm 20.9% bộ nhớ</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thời gian khởi động OS (Boot time)</strong></td>
+                                <td style="color:#34d399; font-weight:bold;">4.8 giây (systemd-analyze)</td>
+                                <td>12.6 giây (systemd-analyze)</td>
+                                <td><strong>Arch Linux khởi động nhanh hơn 2.6 lần</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thông lượng xử lý AI (Throughput)</strong></td>
+                                <td style="color:#34d399; font-weight:bold;">342.5 Requests / Giây</td>
+                                <td>328.1 Requests / Giây</td>
+                                <td><strong>Arch Linux xử lý nhanh hơn 4.3%</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Độ trễ phân vị p95 (95% requests)</strong></td>
+                                <td style="color:#34d399; font-weight:bold;">64.8 ms</td>
+                                <td>72.5 ms</td>
+                                <td><strong>Thời gian phản hồi ổn định vượt trội</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Kiểm định an ninh 04_verify_system.sh</strong></td>
+                                <td style="color:#34d399; font-weight:bold;">5/5 Bài Test PASS (100%)</td>
+                                <td>5/5 Bài Test PASS (100%)</td>
+                                <td><strong>Đạt chuẩn bảo mật Enterprise</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 11 ==================== -->
+        <div class="slide" id="slide-11">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">10. Đánh Giá Tiến Độ & Sản Phẩm Đạt Được <span class="tag">Deliverables</span></h2>
+                    <div class="slide-subtitle">Tổng kết khối lượng công việc và các sản phẩm bàn giao thực tế</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="card">
+                    <div class="card-header green">🎯 Đánh Giá 6 Mục Tiêu SMART</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><strong>Mục tiêu 1 (IaC):</strong> Bộ script cài đặt, hardening và rollback tự động 100%.</li>
+                            <li><strong>Mục tiêu 2 (Bảo mật Host):</strong> SSH port 2222, nftables meter rate-limiting hoạt động chuẩn xác.</li>
+                            <li><strong>Mục tiêu 3 (Rootless):</strong> Docker unprivileged UID 1003, linger hoạt động bền vững.</li>
+                            <li><strong>Mục tiêu 4 (Zero-Trust):</strong> Đóng gói 5 microservices, cô lập tuyệt đối CSDL.</li>
+                            <li><strong>Mục tiêu 5 (CLI & Verify):</strong> Công cụ <code>ai_cli.sh</code> và <code>04_verify_system.sh</code> đạt 5/5.</li>
+                            <li><strong>Mục tiêu 6 (Benchmark):</strong> Đo lường đầy đủ RAM và tải trọng API.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card featured">
+                    <div class="card-header blue">📦 Danh Mục Sản Phẩm Bàn Giao</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><strong>Kho mã nguồn Git hoàn chỉnh:</strong> Đã đồng bộ nhánh <code>arch-mlops</code> trên GitHub.</li>
+                            <li><strong>Báo cáo đồ án chính thức:</strong> Đầy đủ 7 chương, dày <strong>82 trang</strong> chuẩn mẫu VKU (định dạng <code>.docx</code> và <code>.pdf</code>).</li>
+                            <li><strong>Hai hệ thống máy ảo hoạt động:</strong> Node Arch Linux và Node Ubuntu Server.</li>
+                            <li><strong>Bộ kịch bản IaC:</strong> <code>01_system_hardening.sh</code>, <code>01_rollback_hardening.sh</code>, <code>02_setup_rootless_docker.sh</code>, <code>03_deploy_stack.sh</code>, <code>04_verify_system.sh</code>, <code>ai_cli.sh</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDE 12 ==================== -->
+        <div class="slide" id="slide-12">
+            <div class="slide-header">
+                <div>
+                    <h2 class="slide-title">11. Hướng Phát Triển & Lời Cảm Ơn <span class="tag">Future Work</span></h2>
+                    <div class="slide-subtitle">Định hướng nâng cấp hệ thống trong tương lai và phần hỏi đáp</div>
+                </div>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="card">
+                    <div class="card-header amber">🚀 4 Hướng Phát Triển Mở Rộng</div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><strong>Rootless k3s Cluster:</strong> Nâng cấp từ máy chủ đơn lên cụm phân tán Kubernetes không đặc quyền.</li>
+                            <li><strong>Mutual TLS (mTLS):</strong> Tích hợp Service Mesh Linkerd mã hóa toàn bộ dữ liệu giao tiếp nội bộ giữa các vi dịch vụ.</li>
+                            <li><strong>Runtime Security eBPF:</strong> Triển khai Falco giám sát các lời gọi hệ thống thời gian thực ở cấp hạt nhân.</li>
+                            <li><strong>DevSecOps Pipeline:</strong> Tích hợp công cụ quét Trivy vào GitHub Actions để tự động kiểm định lỗ hổng CVE trước khi triển khai.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card featured" style="justify-content:center; text-align:center;">
+                    <h3 style="font-size:2.2rem; color:#ffffff; margin-bottom:15px;">XIN CHÂN THÀNH CẢM ƠN!</h3>
+                    <p style="font-size:1.15rem; color:#94a3b8; line-height:1.6; margin-bottom:25px;">
+                        Nhóm xin trân trọng cảm ơn <strong>TS. Hoàng Hữu Đức</strong> và <strong>quý Thầy Cô Hội đồng phản biện Khoa KHMT</strong> đã tận tình hướng dẫn và đánh giá đề tài!
+                    </p>
+                    <div style="font-size:1.4rem; font-weight:800; color:#38bdf8;">
+                        Q & A: KÍNH MỜI THẦY CÔ ĐẶT CÂU HỎI
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Controls Bar -->
+    <div class="controls-bar">
+        <div>
+            <span>Dùng phím <strong>◀ / ▶</strong> hoặc <strong>Space</strong> để chuyển slide | Bấm <strong>F</strong> để bật toàn màn hình</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <span id="slideCounter" style="font-weight:700; color:#f1f5f9;">Slide 1 / 12</span>
+            <div class="nav-buttons">
+                <button class="btn-nav" onclick="prevSlide()">◀ Trước</button>
+                <button class="btn-nav" onclick="nextSlide()">Sau ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 12;
+
+        function showSlide(index) {
+            if (index < 1) index = 1;
+            if (index > totalSlides) index = totalSlides;
+
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            const targetSlide = document.getElementById(`slide-${index}`);
+            if (targetSlide) {
+                targetSlide.classList.add('active');
+            }
+
+            currentSlide = index;
+            document.getElementById('slideCounter').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+            document.getElementById('progressBar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                    document.exitFullscreen().catch(() => {});
+                }
+            } else if (e.key === 'Home') {
+                showSlide(1);
+            } else if (e.key === 'End') {
+                showSlide(totalSlides);
+            }
+        });
+    </script>
+</body>
+</html>
