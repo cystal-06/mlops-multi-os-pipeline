@@ -166,7 +166,7 @@ function addCard(slide, x, y, w, h, borderColor = COLORS.cardBorder, fillColor =
             color: COLORS.accentBlue,
             items: [
                 'Arch Linux: Mô hình Rolling-Release, nhân Linux 6.x mới nhất, siêu tối giản (~400MB RAM), không cài đặt dịch vụ thừa.',
-                'Ubuntu Server: Chu kỳ LTS 5 năm ổn định, phổ biến nhưng cồng kềnh (~750MB RAM), nhiều daemon nền mặc định.',
+                'Ubuntu: Chu kỳ LTS 5 năm ổn định, phổ biến nhưng cồng kềnh (~750MB RAM), nhiều daemon nền mặc định.',
                 'Nhu cầu cấp thiết: Cần một công trình đo lường đối sánh định lượng khoa học khi chạy tải công việc MLOps thực tế.'
             ]
         },
@@ -289,7 +289,7 @@ function addCard(slide, x, y, w, h, borderColor = COLORS.cardBorder, fillColor =
 {
     const slide = pptx.addSlide();
     slide.background = { color: COLORS.bgLight };
-    addHeader(slide, 'KIẾN TRÚC HẠ TẦNG', '3. KIẾN TRÚC HỆ THỐNG TỔNG THỂ DUAL-NODE', 'Mô hình thực nghiệm đối kháng song song giữa nút Arch Linux và nút Ubuntu Server');
+    addHeader(slide, 'KIẾN TRÚC HẠ TẦNG', '3. KIẾN TRÚC HỆ THỐNG TỔNG THỂ DUAL-NODE', 'Mô hình thực nghiệm đối kháng song song giữa nút Arch Linux và nút Ubuntu');
     addFooter(slide, 4);
 
     // Left Node: Arch Linux
@@ -325,7 +325,7 @@ function addCard(slide, x, y, w, h, borderColor = COLORS.cardBorder, fillColor =
         });
     });
 
-    // Right Node: Ubuntu Server
+    // Right Node: Ubuntu
     const nx2 = 6.8;
     addCard(slide, nx2, 1.85, 5.733, 4.8, COLORS.navyHeader);
     slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, {
@@ -340,7 +340,7 @@ function addCard(slide, x, y, w, h, borderColor = COLORS.cardBorder, fillColor =
     });
 
     const ubuntuItems = [
-        'Hệ điều hành: Ubuntu Server 22.04 / 24.04 LTS (Nhân Linux 6.8 Enterprise).',
+        'Hệ điều hành: Ubuntu 22.04 / 24.04 LTS (Nhân Linux 6.8 Enterprise).',
         'Tài nguyên tĩnh: Chiếm dụng 742 MB RAM (gấp 1.7 lần so với Arch Linux).',
         'Động cơ Container: Docker Rootful Daemon (Chạy trực tiếp dưới quyền root UID 0).',
         'Cấu hình Stack đối chứng: Chạy cùng bộ 5 vi dịch vụ và khối lượng tải.',
@@ -676,7 +676,7 @@ function addCard(slide, x, y, w, h, borderColor = COLORS.cardBorder, fillColor =
 {
     const slide = pptx.addSlide();
     slide.background = { color: COLORS.bgLight };
-    addHeader(slide, 'ĐỐI SÁNH ĐỊNH LƯỢNG', '9. KẾT QUẢ ĐỐI SÁNH THỰC NGHIỆM ĐỊNH LƯỢNG', 'Bảng số liệu đo lường trực tiếp giữa Arch Linux (Rootless) và Ubuntu Server (Rootful)');
+    addHeader(slide, 'ĐỐI SÁNH ĐỊNH LƯỢNG', '9. KẾT QUẢ ĐỐI SÁNH THỰC NGHIỆM ĐỊNH LƯỢNG', 'Bảng số liệu đo lường trực tiếp giữa Arch Linux (Rootless) và Ubuntu (Rootful)');
     addFooter(slide, 10);
 
     // 4 Stat Highlight Boxes
@@ -709,7 +709,7 @@ function addCard(slide, x, y, w, h, borderColor = COLORS.cardBorder, fillColor =
         [
             { text: 'Chỉ số đo lường hiệu năng', options: { fill: COLORS.navyHeader, color: 'FFFFFF', bold: true, align: 'center' } },
             { text: 'Arch Linux (Rootless Docker)', options: { fill: COLORS.navyHeader, color: 'FFFFFF', bold: true, align: 'center' } },
-            { text: 'Ubuntu Server (Rootful Docker)', options: { fill: COLORS.navyHeader, color: 'FFFFFF', bold: true, align: 'center' } },
+            { text: 'Ubuntu (Rootful Docker)', options: { fill: COLORS.navyHeader, color: 'FFFFFF', bold: true, align: 'center' } },
             { text: 'Chênh lệch / Đánh giá', options: { fill: COLORS.navyHeader, color: 'FFFFFF', bold: true, align: 'center' } }
         ],
         [
@@ -811,7 +811,7 @@ function addCard(slide, x, y, w, h, borderColor = COLORS.cardBorder, fillColor =
         },
         {
             name: 'Nguyễn Tùng Dương (Thành viên)',
-            role: 'Chịu trách nhiệm triển khai nút Ubuntu Server baseline, chuẩn hóa cấu hình đối chứng và kiểm thử an ninh mạng.',
+            role: 'Chịu trách nhiệm triển khai nút Ubuntu baseline, chuẩn hóa cấu hình đối chứng và kiểm thử an ninh mạng.',
             percent: 'Đóng góp: 100%'
         },
         {
