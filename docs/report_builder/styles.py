@@ -125,3 +125,40 @@ def note_box(title, text):
         f'</w:r>'
         f'</w:p>'
     )
+
+
+
+
+
+def image_figure(rel_id, fig_num, fig_title, fig_desc, cx=5486400, cy=2286000):
+    clean_id = fig_num.replace(".", "")
+    xml = [
+        "<w:p>",
+        "<w:pPr><w:jc w:val=\"center\"/><w:spacing w:line=\"240\" w:lineRule=\"auto\" w:before=\"120\" w:after=\"60\"/></w:pPr>",
+        "<w:r>",
+        "<w:drawing>",
+        "<wp:inline distT=\"0\" distB=\"0\" distL=\"0\" distR=\"0\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\">",
+        f"<wp:extent cx=\"{cx}\" cy=\"{cy}\"/>",
+        "<wp:effectExtent l=\"0\" t=\"0\" r=\"0\" b=\"0\"/>",
+        f"<wp:docPr id=\"{clean_id}\" name=\"Figure {fig_num}\"/>",
+        "<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" noChangeAspect=\"1\"/></wp:cNvGraphicFramePr>",
+        "<a:graphic xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">",
+        "<a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">",
+        "<pic:pic xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">",
+        f"<pic:nvPicPr><pic:cNvPr id=\"0\" name=\"fig_{fig_num}.png\"/><pic:cNvPicPr/></pic:nvPicPr>",
+        "<pic:blipFill>",
+        f"<a:blip xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:embed=\"{rel_id}\"/>",
+        "<a:stretch><a:fillRect/></a:stretch>",
+        "</pic:blipFill>",
+        f"<pic:spPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"{cx}\" cy=\"{cy}\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></pic:spPr>",
+        "</pic:pic>",
+        "</a:graphicData>",
+        "</a:graphic>",
+        "</wp:inline>",
+        "</w:drawing>",
+        "</w:r>",
+        "</w:p>"
+    ]
+    xml.append(p(f"Hình {fig_num}: {fig_title}", align="center", bold=True, size=24, color="002060", space_before=60, space_after=40))
+    xml.append(p(f"Mô tả: Hình {fig_num} {fig_desc}", align="both", italic=True, size=23, color="444444", space_before=20, space_after=120, indent=400))
+    return "".join(xml)

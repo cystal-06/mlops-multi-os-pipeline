@@ -1,4 +1,4 @@
-from .styles import p, heading1, heading2, heading3, page_break, table_grid, figure_box
+from .styles import p, heading1, heading2, heading3, page_break, table_grid, figure_box, image_figure
 
 def build_chapter1():
     body = []
@@ -21,9 +21,7 @@ def build_chapter1():
         "| Prometheus + Grafana      FastAPI OCR Service        MinIO S3 Buckets   |",
         "+-------------------------------------------------------------------------+"
     ]
-    body.append(figure_box("1.2", "Chu trình khép kín của nền tảng MLOps trong môi trường sản xuất",
-                           "mô tả dòng chảy dữ liệu tự động hóa liên tục từ dữ liệu thô ban đầu, qua huấn luyện, lưu vết siêu tham số với MLflow, đóng gói lưu trữ mô hình trên MinIO S3, triển khai phục vụ suy luận với FastAPI và giám sát thời gian thực với Prometheus.",
-                           schematic_1_2))
+    body.append(image_figure("rIdImg1_2", "1.2", "Chu trình khép kín của nền tảng MLOps trong môi trường sản xuất", "mô tả dòng chảy dữ liệu tự động hóa liên tục từ dữ liệu thô ban đầu, qua huấn luyện, lưu vết siêu tham số với MLflow, đóng gói lưu trữ mô hình trên MinIO S3, triển khai phục vụ suy luận với FastAPI và giám sát thời gian thực với Prometheus.", cx=5486400, cy=2286000))
 
     body.append(p("Trong toàn bộ chu trình phức tạp này, hệ điều hành Linux đóng vai trò là xương sống hạ tầng không thể thay thế. Hạt nhân Linux chịu trách nhiệm phân phối hàng gigabyte bộ nhớ RAM cho các tiến trình huấn luyện, xử lý các luồng socket mạng TCP với độ trễ thấp và cô lập các môi trường phụ thuộc thông qua công nghệ container.", indent=400))
 

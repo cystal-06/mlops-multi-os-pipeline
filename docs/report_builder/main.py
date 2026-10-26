@@ -18,65 +18,69 @@ def generate_full_docx(output_path):
     print("[*] Bắt đầu tổng hợp nội dung báo cáo đồ án VKU...")
     body_elements = []
     
-    # 1. Preliminary Pages (Cover, Acknowledgements, Reviews, TOC, Lists)
     body_elements.extend(build_preliminary())
-    
-    # 2. Introduction
     body_elements.extend(build_introduction())
-    
-    # 3. Chapter 1: Overview
     body_elements.extend(build_chapter1())
-    
-    # 4. Chapter 2: Theory & Core Tech
     body_elements.extend(build_chapter2())
-    
-    # 5. Chapter 3: Methodology & Design
     body_elements.extend(build_chapter3())
-    
-    # 6. Chapter 4: Implementation & Operations
     body_elements.extend(build_chapter4())
-    
-    # 7. Chapter 5: Quantitative Benchmarking & Security Evaluation
     body_elements.extend(build_chapter5())
-    
-    # 8. Chapter 6 & 7: Conclusion & References
     body_elements.extend(build_chapter6_7())
 
-    # Build OpenXML package
     doc_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-        '<w:body>'
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" "
+        "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" "
+        "xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" "
+        "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" "
+        "xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">"
+        "<w:body>"
         + "".join(body_elements) +
-        '<w:sectPr>'
-        '<w:pgSz w:w="11906" w:h="16838"/>'
-        '<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1417"/>'
-        '</w:sectPr>'
-        '</w:body>'
-        '</w:document>'
+        "<w:sectPr>"
+        "<w:pgSz w:w=\"11906\" w:h=\"16838\"/>"
+        "<w:pgMar w:top=\"1134\" w:right=\"1134\" w:bottom=\"1134\" w:left=\"1417\"/>"
+        "</w:sectPr>"
+        "</w:body>"
+        "</w:document>"
     )
 
     types_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-        '<Default Extension="xml" ContentType="application/xml"/>'
-        '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
-        '</Types>'
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">"
+        "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>"
+        "<Default Extension=\"xml\" ContentType=\"application/xml\"/>"
+        "<Default Extension=\"png\" ContentType=\"image/png\"/>"
+        "<Override PartName=\"/word/document.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"/>"
+        "</Types>"
     )
 
-    rels_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
-        '</Relationships>'
+    rels_root = (
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+        "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\"/>"
+        "</Relationships>"
+    )
+
+    rels_doc = (
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+        "<Relationship Id=\"rIdImg1_2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\" Target=\"media/hinh_1_2.png\"/>"
+        "</Relationships>"
     )
 
     print(f"[*] Đang đóng gói tệp tin DOCX tại: {output_path}...")
-    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as docx:
-        docx.writestr('[Content_Types].xml', types_xml)
-        docx.writestr('_rels/.rels', rels_xml)
-        docx.writestr('word/document.xml', doc_xml)
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as docx:
+        docx.writestr("[Content_Types].xml", types_xml)
+        docx.writestr("_rels/.rels", rels_root)
+        docx.writestr("word/_rels/document.xml.rels", rels_doc)
+        docx.writestr("word/document.xml", doc_xml)
+        
+        # Thêm ảnh đồ họa
+        img_1_2_path = "/home/nguyencongduc/mlops-multi-os-pipeline/docs/figures/hinh_1_2_mlops_lifecycle.png"
+        if os.path.exists(img_1_2_path):
+            with open(img_1_2_path, "rb") as img_f:
+                docx.writestr("word/media/hinh_1_2.png", img_f.read())
+                
     print(f"[+] Hoàn tất xuất tệp DOCX: {os.path.getsize(output_path):,} bytes")
 
 if __name__ == "__main__":
