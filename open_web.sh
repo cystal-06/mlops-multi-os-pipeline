@@ -3,7 +3,14 @@
 
 echo "[*] Đang mở các giao diện Web của đồ án MLOps trên trình duyệt..."
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! pgrep -f "python3.*web_cockpit.py" >/dev/null 2>&1; then
+    nohup python3 "${SCRIPT_DIR}/web_cockpit.py" >/tmp/web_cockpit.log 2>&1 &
+    sleep 0.8
+fi
+
 URLS=(
+    "http://localhost:8888"
     "http://localhost:8080/docs"
     "http://localhost:5000"
     "http://localhost:3000"

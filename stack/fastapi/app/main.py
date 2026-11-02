@@ -1,4 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.schemas import OCRResponse
@@ -10,10 +12,27 @@ app = FastAPI(
     version="3.0.0",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 Instrumentator().instrument(app).expose(app)
 
 current_model_version = "v3.0.0-tesseract-ocr"
 MODEL_ENGINE = "Tesseract-OCR-Core"
+
+@app.get("/", status_code=status.HTTP_200_OK)
+def index():
+    return {
+        "title": "VKU MLOps AI Vision Serving API",
+        "documentation": "/docs",
+        "health": "/health",
+        "interactive_cockpit": "http://localhost:8888"
+    }
 
 @app.get("/health", status_code=status.HTTP_200_OK)
 def health():
