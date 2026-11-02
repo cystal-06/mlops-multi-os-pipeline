@@ -567,83 +567,6 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
       border-color: var(--accent-cyan);
       background: rgba(56, 189, 248, 0.1);
     }
-
-    .benchmark-inline-btn {
-      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
-      transition: all 0.2s;
-    }
-
-    .benchmark-inline-btn:hover {
-      box-shadow: 0 0 18px rgba(16, 185, 129, 0.5);
-      transform: translateY(-1px);
-    }
-
-    /* Modal for Benchmark */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 99;
-    }
-
-    .modal-box {
-      background: #0D1527;
-      border: 1px solid var(--accent-cyan);
-      border-radius: 14px;
-      width: 520px;
-      max-width: 90vw;
-      padding: 24px;
-      box-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
-    }
-
-    .modal-title {
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .modal-close {
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 18px;
-    }
-
-    .bench-result-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .bench-stat {
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 8px;
-      padding: 10px;
-      text-align: center;
-    }
-    .bench-stat .lbl { font-size: 11px; color: var(--text-muted); }
-    .bench-stat .val { font-size: 18px; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -782,35 +705,13 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
       <a href="http://localhost:8080/docs" target="_blank" class="eco-btn">📑 Swagger API (:8080)</a>
     </div>
 
-    <div>
-      <button class="benchmark-inline-btn" onclick="runLiveBenchmarkModal()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        BẮN TẢI BENCHMARK NGAY (50 REQ)
-      </button>
+    <div style="font-size:12px;color:var(--text-muted);font-weight:600;">
+      🛡️ VKU Thesis 2026 • Dual-Node MLOps Isolation Architecture
     </div>
   </footer>
 
   <!-- Toast Notification -->
   <div class="toast" id="toastBox">Đã sao chép văn bản vào bộ nhớ tạm!</div>
-
-  <!-- Live Benchmark Modal -->
-  <div class="modal-overlay" id="benchModal">
-    <div class="modal-box">
-      <div class="modal-title">
-        <span>⚡ KẾT QUẢ BENCHMARK TRỰC TIẾP</span>
-        <button class="modal-close" onclick="closeBenchModal()">&times;</button>
-      </div>
-      <div id="benchModalBody" style="font-size:13px;color:var(--text-muted);">
-        Đang khởi động 10 luồng bắn tải 50 requests vào FastAPI OCR... Vui lòng đợi!
-      </div>
-      <div class="bench-result-grid" id="benchGrid" style="display:none;">
-        <div class="bench-stat"><div class="lbl">THÔNG LƯỢNG (RPS)</div><div class="val" id="bStatRps">--</div></div>
-        <div class="bench-stat"><div class="lbl">ĐỘ TRỄ P95</div><div class="val" id="bStatP95">-- ms</div></div>
-        <div class="bench-stat"><div class="lbl">TỔNG THỜI GIAN</div><div class="val" id="bStatDur">-- s</div></div>
-        <div class="bench-stat"><div class="lbl">TỶ LỆ THÀNH CÔNG</div><div class="val" id="bStatRate">100%</div></div>
-      </div>
-    </div>
-  </div>
 
   <script>
     let currentImageFile = null;
@@ -976,35 +877,6 @@ HTML_DASHBOARD = r"""<!DOCTYPE html>
       box.innerText = msg;
       box.style.display = 'block';
       setTimeout(() => { box.style.display = 'none'; }, 2600);
-    }
-
-    // Quick Live Benchmark Modal
-    async function runLiveBenchmarkModal() {
-      const modal = document.getElementById('benchModal');
-      const body = document.getElementById('benchModalBody');
-      const grid = document.getElementById('benchGrid');
-      modal.style.display = 'flex';
-      body.style.display = 'block';
-      grid.style.display = 'none';
-      body.innerText = 'Đang bắn 50 requests song song vào FastAPI OCR để đo lường p95 và RPS...';
-
-      try {
-        const res = await fetch('/api/benchmark-quick', { method: 'POST' });
-        const data = await res.json();
-
-        body.style.display = 'none';
-        grid.style.display = 'grid';
-        document.getElementById('bStatRps').innerText = data.rps + ' req/s';
-        document.getElementById('bStatP95').innerText = data.p95_ms + ' ms';
-        document.getElementById('bStatDur').innerText = data.duration_sec + ' s';
-        document.getElementById('bStatRate').innerText = data.success_rate + '%';
-      } catch (e) {
-        body.innerText = 'Lỗi thực thi benchmark: ' + e;
-      }
-    }
-
-    function closeBenchModal() {
-      document.getElementById('benchModal').style.display = 'none';
     }
 
     // Auto-select receipt sample on startup
