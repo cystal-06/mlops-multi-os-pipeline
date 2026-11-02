@@ -57,26 +57,35 @@ require_non_root() {
 
 require_ubuntu() {
     source /etc/os-release
-    if [[ "$ID" != ubuntu || ! "$VERSION_ID" =~ ^(22\.04|24\.04)$ ]]; then
-        log_error "Use a dedicated Ubuntu Server 22.04/24.04 LTS VM."
+    if [[ "${ID:-}" != "ubuntu" ]]; then
+        log_error "This script requires Ubuntu."
         exit 1
     fi
+    case "${VERSION_ID:-}" in
+        22.04|24.04) ;;
+        *)
+            log_error "Use Ubuntu Server 22.04 or 24.04 LTS."
+            exit 1
+            ;;
+    esac
 }
 
 backup_path() {
     local path=$1
-    mkdir -p "${STATE_DIR}/files$(dirname "$path")"
-    rm -rf -- "${STATE_DIR}/files${path}"
+    local saved="${STATE_DIR:?STATE_DIR must be set}/files${path}"
+    mkdir -p "$(dirname "$saved")"
+    rm -rf -- "$saved"
     if [[ -e "$path" || -L "$path" ]]; then
-        cp -a "$path" "${STATE_DIR}/files${path}"
+        cp -a -- "$path" "$saved"
     fi
 }
 
 restore_path() {
     local path=$1
+    local saved="${STATE_DIR:?STATE_DIR must be set}/files${path}"
     rm -rf -- "$path"
-    if [[ -e "${STATE_DIR}/files${path}" || -L "${STATE_DIR}/files${path}" ]]; then
+    if [[ -e "$saved" || -L "$saved" ]]; then
         mkdir -p "$(dirname "$path")"
-        cp -a "${STATE_DIR}/files${path}" "$path"
+        cp -a -- "$saved" "$path"
     fi
 }
