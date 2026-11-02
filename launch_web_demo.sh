@@ -23,19 +23,18 @@ echo "║        Interactive Visual Dashboard • Real-Time AI Inference        
 echo "╚══════════════════════════════════════════════════════════════════════╝"
 echo -e "${C_RESET}"
 
-# Check if web_cockpit.py is already running
-if pgrep -f "python3.*web_cockpit.py" >/dev/null 2>&1; then
-    echo -e "${C_GREEN}[✔] AI Vision Cockpit Server đã chạy sẵn trên cổng :${PORT}!${C_RESET}"
+# Ensure web_cockpit is active
+if ! curl -s -f http://localhost:${PORT}/ >/dev/null 2>&1; then
+    echo -e "${C_YELLOW}[*] Đang khởi động AI Vision Cockpit Server qua systemd...${C_RESET}"
+    systemctl --user start mlops-web-cockpit.service 2>/dev/null || nohup python3 "${COCKPIT_PY}" >/tmp/web_cockpit.log 2>&1 &
+    sleep 1.0
+fi
+
+if curl -s -f http://localhost:${PORT}/ >/dev/null 2>&1; then
+    echo -e "${C_GREEN}[✔] AI Vision Cockpit Server đã sẵn sàng trên cổng :${PORT}!${C_RESET}"
 else
-    echo -e "${C_YELLOW}[*] Đang khởi động AI Vision Cockpit Server trên cổng :${PORT}...${C_RESET}"
-    nohup python3 "${COCKPIT_PY}" >/tmp/web_cockpit.log 2>&1 &
-    sleep 1.2
-    if pgrep -f "python3.*web_cockpit.py" >/dev/null 2>&1; then
-        echo -e "${C_GREEN}[✔] Khởi động Server thành công!${C_RESET}"
-    else
-        echo -e "\033[1;31m[✘] Lỗi khởi động! Kiểm tra log tại /tmp/web_cockpit.log\033[0m"
-        exit 1
-    fi
+    echo -e "\033[1;31m[✘] Lỗi khởi động! Kiểm tra log tại /tmp/web_cockpit.log hoặc journalctl --user -u mlops-web-cockpit\033[0m"
+    exit 1
 fi
 
 TARGET_URL="http://localhost:${PORT}"
