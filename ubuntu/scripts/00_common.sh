@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+set -E
 
 readonly COLOR_RESET="\033[0m"
 readonly COLOR_RED="\033[1;31m"
@@ -33,12 +34,12 @@ log_step() {
 error_trap() {
     local exit_code=$?
     local line_no=$1
-    local command="${BASH_COMMAND}"
+    local command=$2
     log_error "Command failed at line ${line_no} with exit code ${exit_code}: '${command}'"
     exit "${exit_code}"
 }
 
-trap 'error_trap ${LINENO}' ERR
+trap 'error_trap "$LINENO" "$BASH_COMMAND"' ERR
 
 require_root() {
     if [[ "${EUID}" -ne 0 ]]; then

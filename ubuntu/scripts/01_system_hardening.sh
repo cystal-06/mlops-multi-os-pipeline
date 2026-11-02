@@ -1,70 +1,77 @@
 #!/usr/bin/env bash
-
+set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/00_common.sh"
-
 require_root
+require_ubuntu
+STATE_DIR=/var/lib/mlops-infra/hardening
+SSH_DROPIN=/etc/ssh/mlops_hardened.conf
 
-DEPLOY_USER="mlops"
-CONFIGS_DIR="${SCRIPT_DIR}/../configs"
-
-log_step "PHASE 1: Setting up isolated deploy user '${DEPLOY_USER}'"
-
-if id "${DEPLOY_USER}" &>/dev/null; then
-    log_info "User '${DEPLOY_USER}' already exists. Skipping creation."
-else
-    log_info "Creating user '${DEPLOY_USER}' with bash shell and sudo group..."
-    useradd -m -s /bin/bash -G sudo "${DEPLOY_USER}"
-    log_success "User '${DEPLOY_USER}' created successfully."
-    log_warn "Remember to set a password for '${DEPLOY_USER}' using: sudo passwd ${DEPLOY_USER}"
+if [[ -n "${SSH_CONNECTION:-}" ]]; then
+    log_error "Run from the VMware console, not over SSH (the SSH port will change)."
+    exit 1
 fi
-
-log_step "PHASE 2: Hardening SSH Daemon (Port 2222)"
-
-SSHD_CONF_DIR="/etc/ssh/sshd_config.d"
-mkdir -p "${SSHD_CONF_DIR}"
-SSHD_SRC="${CONFIGS_DIR}/sshd_hardened.conf"
-SSHD_DST="${SSHD_CONF_DIR}/99-mlops-hardened.conf"
-
-if [[ -f "${SSHD_SRC}" ]]; then
-    log_info "Installing hardened SSH drop-in configuration to ${SSHD_DST}"
-    cp "${SSHD_SRC}" "${SSHD_DST}"
-    chmod 0600 "${SSHD_DST}"
-
-    if [[ ! -f /etc/ssh/ssh_host_rsa_key && ! -f /etc/ssh/ssh_host_ed25519_key ]]; then
-        log_info "Generating host keys with 'ssh-keygen -A'..."
-        ssh-keygen -A
-    fi
-
-    if sshd -t; then
-        log_info "SSH syntax valid. Restarting ssh service..."
-        systemctl enable ssh || systemctl enable sshd
-        systemctl restart ssh || systemctl restart sshd
-        log_success "SSH daemon running on Port 2222."
-    else
-        log_error "sshd syntax test failed! Reverting drop-in config."
-        rm -f "${SSHD_DST}"
-        exit 1
-    fi
-fi
-
-log_step "PHASE 3: Configuring UFW Firewall"
-
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -qq
-apt-get install -y -qq ufw
+apt-get update
+apt-get install -y openssh-server ufw
+install -d -m 0700 "$STATE_DIR"
+if [[ ! -f "$STATE_DIR/ready" ]]; then
+    for path in /etc/ssh/sshd_config "$SSH_DROPIN" \
+        /etc/ssh/sshd_config.d/99-mlops-hardened.conf /etc/ufw /etc/default/ufw; do
+        backup_path "$path"
+    done
+    systemctl is-enabled ssh.service > "$STATE_DIR/ssh-enabled" 2>/dev/null || true
+    systemctl is-active ssh.service > "$STATE_DIR/ssh-active" 2>/dev/null || true
+    systemctl is-enabled ssh.socket > "$STATE_DIR/socket-enabled" 2>/dev/null || true
+    systemctl is-active ssh.socket > "$STATE_DIR/socket-active" 2>/dev/null || true
+    LC_ALL=C ufw status > "$STATE_DIR/ufw-status"
+    touch "$STATE_DIR/ready"
+fi
 
+rollback_on_error() {
+    local code=$? line=$1 command=$2
+    trap - ERR
+    log_error "Line $line: $command (exit $code). Restoring SSH/UFW backup."
+    bash "$SCRIPT_DIR/01_rollback_hardening.sh" || log_error "Rollback failed: use VM snapshot."
+    exit "$code"
+}
+trap 'rollback_on_error "$LINENO" "$BASH_COMMAND"' ERR
+
+if ! id mlops >/dev/null 2>&1; then
+    useradd -m -s /bin/bash mlops
+fi
+log_info "Deploy user: mlops. Set its password afterwards with sudo passwd mlops."
+
+install -d -m 0755 /etc/ssh/sshd_config.d /run/sshd
+install -m 0600 "$SCRIPT_DIR/../configs/sshd_hardened.conf" "$SSH_DROPIN"
+rm -f /etc/ssh/sshd_config.d/99-mlops-hardened.conf
+if ! head -n 1 /etc/ssh/sshd_config | grep -Fxq "Include $SSH_DROPIN"; then
+    sed -i "1iInclude $SSH_DROPIN" /etc/ssh/sshd_config
+fi
+ssh-keygen -A
+/usr/sbin/sshd -t
+[[ "$(/usr/sbin/sshd -T | awk '$1 == "port" {print $2}')" == 2222 ]]
+[[ "$(/usr/sbin/sshd -T | awk '$1 == "permitrootlogin" {print $2}')" == no ]]
+
+log_info "Replacing UFW rules on this dedicated lab VM; original rules are backed up."
+ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
-
-ufw allow 2222/tcp comment 'Hardened SSH'
-ufw allow 8000/tcp comment 'FastAPI Model Serving'
-ufw allow 5000/tcp comment 'MLflow UI'
-ufw allow 3000/tcp comment 'Grafana Telemetry'
-ufw allow 9001/tcp comment 'MinIO Web Console'
-
+for port in 2222 8000 5000 3000 9001; do
+    ufw allow "${port}/tcp" comment 'MLOps lab'
+done
 ufw --force enable
-log_success "UFW firewall active and configured."
 
-log_step "SUMMARY"
-log_success "Ubuntu Hardening Complete!"
+if systemctl cat ssh.socket >/dev/null 2>&1; then
+    systemctl disable --now ssh.socket
+fi
+systemctl enable ssh.service
+systemctl restart ssh.service
+systemctl is-active --quiet ssh.service
+ss -H -ltn 'sport = :2222' | grep -q .
+if ss -H -ltn 'sport = :22' | grep -q .; then
+    log_error "Port 22 is still listening; refusing to report success."
+    false
+fi
+log_success "SSH: 2222, root login disabled; UFW: five required TCP ports only."
+ufw status verbose
