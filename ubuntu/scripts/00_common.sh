@@ -53,3 +53,38 @@ require_non_root() {
         exit 1
     fi
 }
+
+require_ubuntu() {
+    source /etc/os-release
+    if [[ "${ID:-}" != "ubuntu" ]]; then
+        log_error "This script requires Ubuntu."
+        exit 1
+    fi
+    case "${VERSION_ID:-}" in
+        22.04|24.04) ;;
+        *)
+            log_error "Use Ubuntu Server 22.04 or 24.04 LTS."
+            exit 1
+            ;;
+    esac
+}
+
+backup_path() {
+    local path=$1
+    local saved="${STATE_DIR:?STATE_DIR must be set}/files${path}"
+    mkdir -p "$(dirname "$saved")"
+    rm -rf -- "$saved"
+    if [[ -e "$path" || -L "$path" ]]; then
+        cp -a -- "$path" "$saved"
+    fi
+}
+
+restore_path() {
+    local path=$1
+    local saved="${STATE_DIR:?STATE_DIR must be set}/files${path}"
+    rm -rf -- "$path"
+    if [[ -e "$saved" || -L "$saved" ]]; then
+        mkdir -p "$(dirname "$path")"
+        cp -a -- "$saved" "$path"
+    fi
+}
